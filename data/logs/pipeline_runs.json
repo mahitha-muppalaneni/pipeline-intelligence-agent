@@ -1,0 +1,183 @@
+[
+  {
+    "runId": "a1b2c3d4-0001-4abc-8def-111111111111",
+    "pipelineName": "PL_IngestSalesData_Daily",
+    "dataFactory": "adf-prod-australiaeast-001",
+    "resourceGroup": "rg-data-platform-prod",
+    "status": "Failed",
+    "triggerType": "ScheduleTrigger",
+    "triggerName": "trg_daily_0200_aest",
+    "runStart": "2026-05-17T02:00:05Z",
+    "runEnd": "2026-05-17T02:14:33Z",
+    "durationInMs": 868000,
+    "parameters": {"sourceSchema": "sales", "targetContainer": "silver/sales", "watermarkDate": "2026-05-16"},
+    "activities": [
+      {
+        "activityRunId": "act-001-lookup",
+        "activityName": "LKP_GetWatermark",
+        "activityType": "Lookup",
+        "status": "Succeeded",
+        "start": "2026-05-17T02:00:08Z",
+        "end": "2026-05-17T02:00:15Z",
+        "durationMs": 7000,
+        "output": {"count": 1, "firstRow": {"WatermarkValue": "2026-05-16T00:00:00Z"}},
+        "error": null
+      },
+      {
+        "activityRunId": "act-001-copy",
+        "activityName": "CPY_SalesTransactions_SQLtoBlob",
+        "activityType": "Copy",
+        "status": "Failed",
+        "start": "2026-05-17T02:00:18Z",
+        "end": "2026-05-17T02:14:33Z",
+        "durationMs": 855000,
+        "output": {
+          "dataRead": 0,
+          "dataWritten": 0,
+          "rowsRead": 0,
+          "rowsCopied": 0,
+          "copyDuration": 855,
+          "throughput": 0,
+          "errors": [{"errorCode": "SqlFailedToConnect", "message": "Cannot open server 'sql-sales-prod.database.windows.net'. A network-related or instance-specific error occurred while establishing a connection. Server was not found or was not accessible.", "failureType": "UserError", "target": "CPY_SalesTransactions_SQLtoBlob"}]
+        },
+        "error": {
+          "errorCode": "SqlFailedToConnect",
+          "message": "Cannot open server 'sql-sales-prod.database.windows.net'. A network-related or instance-specific error occurred.",
+          "failureType": "UserError",
+          "target": "CPY_SalesTransactions_SQLtoBlob"
+        }
+      }
+    ],
+    "annotations": ["domain:sales", "env:prod", "owner:data-engineering", "sla:critical"]
+  },
+  {
+    "runId": "a1b2c3d4-0002-4abc-8def-222222222222",
+    "pipelineName": "PL_IngestSalesData_Daily",
+    "dataFactory": "adf-prod-australiaeast-001",
+    "resourceGroup": "rg-data-platform-prod",
+    "status": "Succeeded",
+    "triggerType": "ScheduleTrigger",
+    "triggerName": "trg_daily_0200_aest",
+    "runStart": "2026-05-16T02:00:04Z",
+    "runEnd": "2026-05-16T02:09:47Z",
+    "durationInMs": 583000,
+    "parameters": {"sourceSchema": "sales", "targetContainer": "silver/sales", "watermarkDate": "2026-05-15"},
+    "activities": [
+      {"activityRunId": "act-002-lookup", "activityName": "LKP_GetWatermark", "activityType": "Lookup", "status": "Succeeded", "start": "2026-05-16T02:00:07Z", "end": "2026-05-16T02:00:13Z", "durationMs": 6000, "output": {"count": 1, "firstRow": {"WatermarkValue": "2026-05-15T00:00:00Z"}}, "error": null},
+      {"activityRunId": "act-002-copy", "activityName": "CPY_SalesTransactions_SQLtoBlob", "activityType": "Copy", "status": "Succeeded", "start": "2026-05-16T02:00:15Z", "end": "2026-05-16T02:08:52Z", "durationMs": 517000, "output": {"dataRead": 524288000, "dataWritten": 498073600, "rowsRead": 1482330, "rowsCopied": 1482330, "copyDuration": 517, "throughput": 943.2, "errors": []}, "error": null},
+      {"activityRunId": "act-002-update", "activityName": "SP_UpdateWatermark", "activityType": "SqlServerStoredProcedure", "status": "Succeeded", "start": "2026-05-16T02:08:54Z", "end": "2026-05-16T02:09:02Z", "durationMs": 8000, "output": {}, "error": null}
+    ],
+    "annotations": ["domain:sales", "env:prod", "owner:data-engineering", "sla:critical"]
+  },
+  {
+    "runId": "b2c3d4e5-0003-4abc-8def-333333333333",
+    "pipelineName": "PL_TransformCustomer360",
+    "dataFactory": "adf-prod-australiaeast-001",
+    "resourceGroup": "rg-data-platform-prod",
+    "status": "Succeeded",
+    "triggerType": "ScheduleTrigger",
+    "triggerName": "trg_daily_0400_aest",
+    "runStart": "2026-05-17T04:00:02Z",
+    "runEnd": "2026-05-17T04:52:18Z",
+    "durationInMs": 3136000,
+    "parameters": {"processingDate": "2026-05-16", "targetLayer": "gold"},
+    "activities": [
+      {"activityRunId": "act-003-df1", "activityName": "DF_CleanseCustomerRecords", "activityType": "ExecuteDataFlow", "status": "Succeeded", "start": "2026-05-17T04:00:06Z", "end": "2026-05-17T04:22:44Z", "durationMs": 1358000, "output": {"runStatus": {"metrics": {"CustomerCleanse": {"rowsRead": 3200000, "rowsWritten": 3187450, "rowsDropped": 12550}}}}, "error": null},
+      {"activityRunId": "act-003-df2", "activityName": "DF_MergeCustomer360", "activityType": "ExecuteDataFlow", "status": "Succeeded", "start": "2026-05-17T04:22:50Z", "end": "2026-05-17T04:49:05Z", "durationMs": 1575000, "output": {"runStatus": {"metrics": {"MergeCustomer": {"rowsRead": 6387450, "rowsWritten": 3187450, "rowsUpdated": 145230, "rowsInserted": 12890}}}}, "error": null},
+      {"activityRunId": "act-003-nb", "activityName": "NB_ValidateCustomer360", "activityType": "DatabricksNotebook", "status": "Succeeded", "start": "2026-05-17T04:49:08Z", "end": "2026-05-17T04:52:14Z", "durationMs": 186000, "output": {"runOutput": "Validation passed: 3187450 records. DQ score: 98.6%"}, "error": null}
+    ],
+    "annotations": ["domain:customer", "env:prod", "owner:analytics-engineering", "sla:high"]
+  },
+  {
+    "runId": "c3d4e5f6-0004-4abc-8def-444444444444",
+    "pipelineName": "PL_LoadInventoryFull",
+    "dataFactory": "adf-prod-australiaeast-001",
+    "resourceGroup": "rg-data-platform-prod",
+    "status": "Failed",
+    "triggerType": "TumblingWindowTrigger",
+    "triggerName": "trg_weekly_sunday_0100",
+    "runStart": "2026-05-11T01:00:01Z",
+    "runEnd": "2026-05-11T01:37:22Z",
+    "durationInMs": 2241000,
+    "parameters": {"sourceSystem": "SAP_ECC", "loadType": "Full", "targetSchema": "inventory"},
+    "activities": [
+      {"activityRunId": "act-004-copy1", "activityName": "CPY_SAP_MaterialMaster", "activityType": "Copy", "status": "Succeeded", "start": "2026-05-11T01:00:05Z", "end": "2026-05-11T01:18:30Z", "durationMs": 1105000, "output": {"dataRead": 2147483648, "dataWritten": 1932735283, "rowsRead": 8920000, "rowsCopied": 8920000, "copyDuration": 1105, "throughput": 1710.4, "errors": []}, "error": null},
+      {"activityRunId": "act-004-copy2", "activityName": "CPY_SAP_StockLevels", "activityType": "Copy", "status": "Failed", "start": "2026-05-11T01:18:35Z", "end": "2026-05-11T01:37:22Z", "durationMs": 1127000, "output": {"dataRead": 0, "dataWritten": 0, "rowsRead": 0, "rowsCopied": 0, "errors": [{"errorCode": "UserErrorOdbcOperationFailed", "message": "ODBC Source: ERROR [HY000] [SAP][LIBODBCHDB DLL][HDBODBC] Connection failed: Network error: Cannot assign requested address. ODBC error: message not found; message #-1 .", "failureType": "UserError"}]}, "error": {"errorCode": "UserErrorOdbcOperationFailed", "message": "ODBC connection to SAP HANA failed. Network error: Cannot assign requested address.", "failureType": "UserError"}}
+    ],
+    "annotations": ["domain:inventory", "env:prod", "owner:data-engineering", "sla:high"]
+  },
+  {
+    "runId": "d4e5f6a7-0005-4abc-8def-555555555555",
+    "pipelineName": "PL_IngestFinanceGL_Incremental",
+    "dataFactory": "adf-prod-australiaeast-001",
+    "resourceGroup": "rg-data-platform-prod",
+    "status": "Succeeded",
+    "triggerType": "ScheduleTrigger",
+    "triggerName": "trg_hourly_businesshours",
+    "runStart": "2026-05-17T05:00:01Z",
+    "runEnd": "2026-05-17T05:04:29Z",
+    "durationInMs": 268000,
+    "parameters": {"sourceTable": "GL_Transactions", "incrementalColumn": "PostingDate", "batchSize": 50000},
+    "activities": [
+      {"activityRunId": "act-005-lkp", "activityName": "LKP_MaxPostingDate", "activityType": "Lookup", "status": "Succeeded", "start": "2026-05-17T05:00:04Z", "end": "2026-05-17T05:00:09Z", "durationMs": 5000, "output": {"count": 1, "firstRow": {"MaxPostingDate": "2026-05-17T04:59:00Z"}}, "error": null},
+      {"activityRunId": "act-005-copy", "activityName": "CPY_GLTransactions_Incremental", "activityType": "Copy", "status": "Succeeded", "start": "2026-05-17T05:00:11Z", "end": "2026-05-17T05:03:55Z", "durationMs": 224000, "output": {"dataRead": 52428800, "dataWritten": 48234496, "rowsRead": 24780, "rowsCopied": 24780, "copyDuration": 224, "throughput": 210.3, "errors": []}, "error": null},
+      {"activityRunId": "act-005-sp", "activityName": "SP_UpdateHighWatermark", "activityType": "SqlServerStoredProcedure", "status": "Succeeded", "start": "2026-05-17T05:03:57Z", "end": "2026-05-17T05:04:05Z", "durationMs": 8000, "output": {}, "error": null}
+    ],
+    "annotations": ["domain:finance", "env:prod", "owner:finance-data", "sla:critical"]
+  },
+  {
+    "runId": "e5f6a7b8-0006-4abc-8def-666666666666",
+    "pipelineName": "PL_PowerBI_RefreshDatasets",
+    "dataFactory": "adf-prod-australiaeast-001",
+    "resourceGroup": "rg-data-platform-prod",
+    "status": "TimedOut",
+    "triggerType": "ScheduleTrigger",
+    "triggerName": "trg_pbi_refresh_0600",
+    "runStart": "2026-05-17T06:00:00Z",
+    "runEnd": "2026-05-17T07:00:00Z",
+    "durationInMs": 3600000,
+    "parameters": {"workspaceId": "ws-prod-analytics", "datasetGroup": "executive_dashboards"},
+    "activities": [
+      {"activityRunId": "act-006-web1", "activityName": "WEB_TriggerPBIRefresh_SalesDashboard", "activityType": "WebActivity", "status": "Succeeded", "start": "2026-05-17T06:00:04Z", "end": "2026-05-17T06:00:12Z", "durationMs": 8000, "output": {"statusCode": 202, "headers": {}, "body": "{\"id\":\"refresh-9981\"}"}, "error": null},
+      {"activityRunId": "act-006-web2", "activityName": "WEB_TriggerPBIRefresh_FinanceDashboard", "activityType": "WebActivity", "status": "Succeeded", "start": "2026-05-17T06:00:14Z", "end": "2026-05-17T06:00:21Z", "durationMs": 7000, "output": {"statusCode": 202, "headers": {}, "body": "{\"id\":\"refresh-9982\"}"}, "error": null},
+      {"activityRunId": "act-006-until", "activityName": "UNTIL_WaitForRefreshComplete", "activityType": "Until", "status": "TimedOut", "start": "2026-05-17T06:00:23Z", "end": "2026-05-17T07:00:00Z", "durationMs": 3577000, "output": {}, "error": {"errorCode": "ActivityTimedOut", "message": "Activity 'UNTIL_WaitForRefreshComplete' timed out after 3600 seconds. Power BI dataset refresh did not complete within SLA window.", "failureType": "SystemError"}}
+    ],
+    "annotations": ["domain:reporting", "env:prod", "owner:bi-team", "sla:medium"]
+  },
+  {
+    "runId": "f6a7b8c9-0007-4abc-8def-777777777777",
+    "pipelineName": "PL_ArchiveRawData_Monthly",
+    "dataFactory": "adf-prod-australiaeast-001",
+    "resourceGroup": "rg-data-platform-prod",
+    "status": "Succeeded",
+    "triggerType": "ScheduleTrigger",
+    "triggerName": "trg_monthly_1st_0000",
+    "runStart": "2026-05-01T00:00:03Z",
+    "runEnd": "2026-05-01T03:14:58Z",
+    "durationInMs": 11695000,
+    "parameters": {"archiveMonth": "2026-04", "sourceContainer": "bronze/raw", "archiveContainer": "archive/2026/04"},
+    "activities": [
+      {"activityRunId": "act-007-meta", "activityName": "META_ListBlobsToArchive", "activityType": "GetMetadata", "status": "Succeeded", "start": "2026-05-01T00:00:06Z", "end": "2026-05-01T00:01:44Z", "durationMs": 98000, "output": {"exists": true, "itemCount": 4832, "size": 107374182400}, "error": null},
+      {"activityRunId": "act-007-foreach", "activityName": "FE_ArchiveBatchedFiles", "activityType": "ForEach", "status": "Succeeded", "start": "2026-05-01T00:01:47Z", "end": "2026-05-01T03:14:51Z", "durationMs": 11584000, "output": {"activitiesSucceeded": 4832, "activitiesFailed": 0, "activitiesSkipped": 0}, "error": null}
+    ],
+    "annotations": ["domain:platform", "env:prod", "owner:data-engineering", "sla:low"]
+  },
+  {
+    "runId": "a7b8c9d0-0008-4abc-8def-888888888888",
+    "pipelineName": "PL_IngestSalesData_Daily",
+    "dataFactory": "adf-prod-australiaeast-001",
+    "resourceGroup": "rg-data-platform-prod",
+    "status": "Failed",
+    "triggerType": "ManualTrigger",
+    "triggerName": "Manual_Rerun_PostIncident",
+    "runStart": "2026-05-17T03:30:00Z",
+    "runEnd": "2026-05-17T03:32:15Z",
+    "durationInMs": 135000,
+    "parameters": {"sourceSchema": "sales", "targetContainer": "silver/sales", "watermarkDate": "2026-05-16"},
+    "activities": [
+      {"activityRunId": "act-008-lookup", "activityName": "LKP_GetWatermark", "activityType": "Lookup", "status": "Succeeded", "start": "2026-05-17T03:30:03Z", "end": "2026-05-17T03:30:09Z", "durationMs": 6000, "output": {"count": 1, "firstRow": {"WatermarkValue": "2026-05-16T00:00:00Z"}}, "error": null},
+      {"activityRunId": "act-008-copy", "activityName": "CPY_SalesTransactions_SQLtoBlob", "activityType": "Copy", "status": "Failed", "start": "2026-05-17T03:30:11Z", "end": "2026-05-17T03:32:15Z", "durationMs": 124000, "output": {"dataRead": 0, "dataWritten": 0, "rowsRead": 0, "rowsCopied": 0, "errors": [{"errorCode": "SqlFailedToConnect", "message": "Cannot open server 'sql-sales-prod.database.windows.net'. Server firewall rule may be blocking the connection.", "failureType": "UserError"}]}, "error": {"errorCode": "SqlFailedToConnect", "message": "Cannot open server 'sql-sales-prod.database.windows.net'. Server firewall rule may be blocking the connection.", "failureType": "UserError"}}
+    ],
+    "annotations": ["domain:sales", "env:prod", "owner:data-engineering", "sla:critical"]
+  }
+]

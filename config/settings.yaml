@@ -1,0 +1,23 @@
+# =============================================================================
+#  Pipeline Intelligence Agent — Configuration
+#  Edit this file to tune the agent. Secrets go in .env only.
+# =============================================================================
+
+llm:
+  model: "llama-3.3-70b-versatile"
+  analyst_temperature: 0.0
+  synthesiser_temperature: 0.2
+  max_log_tokens: 6000
+
+embeddings:
+  model: "gemini-embedding-001"
+
+retriever:
+  top_k: 4
+  chunk_size: 800
+  chunk_overlap: 100
+
+paths:
+  logs: "data/logs/pipeline_runs.json"
+  docs: "data/docs"
+  chroma_db: ".chroma_db"
