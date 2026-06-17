@@ -2,15 +2,19 @@
 
 # 🔧 Pipeline Intelligence Agent
 
-**Natural language monitoring for Azure Data Factory pipelines.**
+**Ask your Azure Data Factory pipelines anything. In plain English.**
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![LangGraph](https://img.shields.io/badge/LangGraph-0.4-6C48C5?style=flat-square)](https://langchain-ai.github.io/langgraph/)
+[![Groq](https://img.shields.io/badge/LLM-Groq%20Llama%203.3%2070B-F55036?style=flat-square)](https://console.groq.com)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 [![Free](https://img.shields.io/badge/Cost-100%25%20Free-brightgreen?style=flat-square)]()
 
-*Ask your pipelines anything. Get root cause, SLA impact, and resolution steps — in seconds.*
+*A production-grade LangGraph multi-agent system that diagnoses ADF pipeline failures,
+detects SLA breaches, and recommends resolution steps — using only free, open-source tools.*
+
+[**Quick Start**](#-quick-start) · [**Architecture**](#-architecture) · [**Tech Stack**](#-tech-stack)
 
 </div>
 
@@ -18,11 +22,12 @@
 
 ## The Problem
 
-When an ADF pipeline fails at 2am, an on-call engineer spends an hour:
-- Cross-referencing error codes against runbooks
-- Determining if an SLA breach has occurred
+Enterprise data teams manage dozens of Azure Data Factory pipelines across multiple business domains.
+When a critical pipeline fails at 2am, an engineer spends an hour:
+- Cross-referencing error logs against runbooks
+- Identifying whether an SLA breach has occurred
 - Tracing downstream cascade failures
-- Figuring out who to call
+- Determining the right escalation contact
 
 This agent does all of that in plain English, instantly.
 
@@ -46,57 +51,104 @@ Agent: PL_IngestSalesData_Daily failed at 02:14 AEST (SqlFailedToConnect).
 ## Architecture
 
 ```
-User Question
-     │
-     ▼
-LangGraph Orchestrator
-     │
-     ├─────────────────────────┐
-     ▼                         ▼
-Retriever Node            Analyst Node
-RAG over runbooks         Queries pipeline
-+ SLA docs                run logs (JSON)
-(ChromaDB +               (Groq LLM)
-Google Embeddings)
-     │                         │
-     └─────────────┬───────────┘
-                   ▼
-           Synthesiser Node
-           Root cause + SLA impact
-           + Resolution steps
-           (Groq LLM)
-                   │
-          ┌────────┴────────┐
-          ▼                 ▼
-     FastAPI API       Streamlit UI
-     /ask /runs        Chat interface
+┌─────────────────────────────────────────────────────────────────────┐
+│                        User Question                                 │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    LangGraph Orchestrator                            │
+│              (compiled state machine — AgentState)                  │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │
+               ┌───────────────┴───────────────┐
+               ▼                               ▼
+┌──────────────────────────┐   ┌──────────────────────────────────────┐
+│     Retriever Node        │   │            Analyst Node              │
+│                           │   │                                      │
+│  Semantic search over     │   │  Queries ADF pipeline run JSON       │
+│  runbooks + SLA policy    │   │  (real Azure Monitor schema)         │
+│                           │   │                                      │
+│  ChromaDB vector store    │   │  Groq Llama 3.3 70B extracts        │
+│  Google AI embeddings     │   │  relevant facts and error details    │
+└──────────────────────────┘   └──────────────────────────────────────┘
+               │                               │
+               └───────────────┬───────────────┘
+                               ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      Synthesiser Node                                │
+│                                                                      │
+│  Combines RAG context + structured data analysis                     │
+│  Groq Llama 3.3 70B → root cause + SLA impact + action steps        │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │
+               ┌───────────────┴───────────────┐
+               ▼                               ▼
+┌──────────────────────────┐   ┌──────────────────────────────────────┐
+│      FastAPI REST API     │   │         Streamlit Chat UI            │
+│  POST /ask                │   │  Pipeline status sidebar             │
+│  GET  /runs               │   │  Natural-language chat               │
+│  GET  /health             │   │  Sample question buttons             │
+└──────────────────────────┘   └──────────────────────────────────────┘
 ```
 
 ---
 
-## Free Tool Stack
+## Tech Stack
+
+Every tool in this project is **free**. No credit card required anywhere.
 
 | Layer | Tool | Free Tier |
 |---|---|---|
 | LLM | [Groq](https://console.groq.com) — Llama 3.3 70B | 14,400 req/day |
 | Embeddings | [Google AI Studio](https://aistudio.google.com) | Free tier |
 | Vector Store | ChromaDB | Local, unlimited |
-| Framework | LangChain + LangGraph | Open source |
+| Framework | LangGraph + LangChain | Open source |
 | API | FastAPI | Open source |
 | UI | Streamlit | Open source |
+| Observability | [LangSmith](https://smith.langchain.com) *(optional)* | Free tier agent tracing |
 
 ---
 
 ## Quick Start
 
-### 1. Get free API keys
+### Prerequisites
+- Python 3.11+
+- Two free API keys (setup takes ~5 minutes — see below)
 
-| Key | Where |
-|-----|-------|
-| `GROQ_API_KEY` | [console.groq.com](https://console.groq.com) → API Keys |
-| `GOOGLE_API_KEY` | [aistudio.google.com](https://aistudio.google.com) → Get API key |
+### 1. Get your free API keys
 
-### 2. Install
+<details>
+<summary><b>Groq API Key</b> (your LLM — Llama 3.3 70B)</summary>
+
+1. Go to **[console.groq.com](https://console.groq.com)**
+2. Sign up with email or Google — no credit card
+3. Left sidebar → **API Keys** → **Create API Key**
+4. Copy the key (starts with `gsk_…`)
+
+</details>
+
+<details>
+<summary><b>Google AI Studio Key</b> (your embeddings)</summary>
+
+1. Go to **[aistudio.google.com](https://aistudio.google.com)**
+2. Sign in with any Google account
+3. Click **Get API key** → **Create API key**
+4. Copy the key (starts with `AIza…`)
+
+</details>
+
+<details>
+<summary><b>Langsmith API Key</b> (tracing)</summary>
+
+1. Go to **[smith.langchain.com](https://smith.langchain.com)**
+2. Sign in with any Google account
+3. Click **Get API key** → **Create API key**
+4. Copy the key (starts with `lsv2…`)
+
+</details>
+
+### 2. Clone and install
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/pipeline-intelligence-agent
@@ -108,7 +160,7 @@ pip install -r requirements.txt
 
 ```bash
 cp .env.example .env
-# Add your two keys to .env
+# Add your keys to .env
 ```
 
 ### 4. Run
@@ -124,6 +176,19 @@ python -m streamlit run src/ui.py
 # Docker (one command)
 docker-compose up --build
 ```
+
+---
+
+## 🔍 Observability
+
+This project supports [LangSmith](https://smith.langchain.com) tracing out of the box — no code changes required.
+
+Once enabled via `.env`, every agent run is fully traced:
+
+- Each node execution — Retriever · Analyst · Synthesiser
+- The exact prompt sent to Groq and the response received
+- Token count and latency per LLM call
+- Which runbook chunks ChromaDB retrieved and their similarity scores
 
 ---
 
@@ -143,29 +208,18 @@ pipeline-intelligence-agent/
 │   └── cli.py                 # Command-line entry point
 │
 ├── data/
-│   ├── logs/pipeline_runs.json      # ADF run logs (Azure Monitor schema)
+│   ├── logs/
+│   │   └── pipeline_runs.json      # 8 realistic ADF runs (Azure Monitor schema)
 │   └── docs/
-│       ├── pipeline_runbooks.md     # Per-pipeline error resolution guides
-│       └── sla_policy.md           # SLA tiers and escalation matrix
+│       ├── pipeline_runbooks.md    # Per-pipeline runbooks with error resolution
+│       └── sla_policy.md           # SLA tiers, escalation matrix, dependency chain
 │
-├── .env.example               # API key template
-├── .gitignore
-├── requirements.txt
-├── Dockerfile
-└── docker-compose.yml
+├── .env.example             # Environment variable template
+├── .gitignore               # Protects .env and generated files
+├── requirements.txt         # Pinned dependencies
+├── Dockerfile               # Multi-stage build
+└── docker-compose.yml       # API + UI with healthcheck
 ```
-
-**The design principle:** one file, one job.
-
-| File | Job |
-|------|-----|
-| `config/settings.yaml` | What to tune |
-| `.env` | Secrets only |
-| `src/config.py` | Bridge between config and code |
-| `src/agent.py` | Agent logic only |
-| `src/api.py` | HTTP layer only |
-| `src/ui.py` | UI only |
-| `src/cli.py` | CLI only |
 
 ---
 
@@ -189,14 +243,18 @@ Interactive docs at **http://localhost:8000/docs**
 
 ---
 
-## Author
+## 👤 Author
 
-**Mahitha Muppalaneni** — Data Engineer  
-6+ years building enterprise ETL/ELT pipelines on Azure, AWS, and GCP.
+**Mahitha Muppalaneni**
+
+Data Engineer with 6+ years building enterprise ETL/ELT pipelines on Azure, AWS, and GCP.
+Specialist in ADF, Python, Power BI, and cloud-native data architectures.
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=flat-square&logo=linkedin)](https://linkedin.com/in/mahitha-muppalaneni)
 [![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?style=flat-square&logo=github)](https://github.com/YOUR_USERNAME)
 
 ---
 
-*MIT License*
+## 📄 License
+
+MIT — free to use, modify, and distribute.
